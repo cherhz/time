@@ -99,14 +99,14 @@ func (lim *Limiter) AllowN(now time.Time, n int) bool {
 	return lim.reserveN(now, n, 0).ok
 }
 
-// PreCheck is shorthand for PreCheckN(time.Now(), 1, maxDelayTime).
-func (lim *Limiter) PreCheck(maxDelayTime time.Duration) bool {
-	return lim.PreCheckN(time.Now(), 1, maxDelayTime)
+// PreCheck is shorthand for PreCheckN(time.Now(), 1).
+func (lim *Limiter) PreCheck() time.Duration {
+	return lim.PreCheckN(time.Now(), 1)
 }
 
 // PreCheckN does not consume any tokens, only check the waitDuration for applying n tokens.
-func (lim *Limiter) PreCheckN(now time.Time, n int, maxDelayTime time.Duration) bool {
-	return lim.preCheckN(now, n, maxDelayTime)
+func (lim *Limiter) PreCheckN(now time.Time, n int) time.Duration {
+	return lim.preCheckN(now, n)
 }
 
 // A Reservation holds information about events that are permitted by a Limiter to happen after a delay.
@@ -298,7 +298,7 @@ func (lim *Limiter) SetLimitAt(now time.Time, newLimit Limit) {
 }
 
 // preCheck does not consume any tokens, only check the waitDuration for applying n tokens.
-func (lim *Limiter) preCheckN(now time.Time, n int, maxDelayTime time.Duration) bool {
+func (lim *Limiter) preCheckN(now time.Time, n int) time.Duration {
 	lim.mu.Lock()
 	defer lim.mu.Unlock()
 
@@ -307,10 +307,10 @@ func (lim *Limiter) preCheckN(now time.Time, n int, maxDelayTime time.Duration) 
 	tokens -= float64(n)
 
 	// Calculate the wait duration
-	if tokens < 0 && lim.limit.durationFromTokens(-tokens) > maxDelayTime {
-		return false
+	if tokens < 0 {
+		return lim.limit.durationFromTokens(-tokens)
 	}
-	return true
+	return 0
 }
 
 // reserveN is a helper method for AllowN, ReserveN, and WaitN.
