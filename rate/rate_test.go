@@ -83,6 +83,28 @@ func run(t *testing.T, lim *Limiter, allows []allow) {
 	}
 }
 
+func TestPreCheck(t *testing.T) {
+	// precheck true
+	lim := NewLimiter(1, 2)
+	if !lim.PreCheck(0) {
+		t.Errorf("limit token:%.2f. expect delay: 0\n", lim.tokens)
+	}
+	if !lim.PreCheckN(time.Now(), 4, 3*time.Second) {
+		t.Errorf("limit token:%.2f. expect delay: 2s\n", lim.tokens)
+	}
+
+	// precheck false
+	lim = NewLimiter(1, 1)
+	lim.Reserve()
+	if lim.PreCheck(0) {
+		t.Errorf("limit token:%.2f. expect delay: 1s\n", lim.tokens)
+	}
+	if lim.PreCheckN(time.Now(), 4, 3*time.Second) {
+		t.Errorf("limit token:%.2f. expect delay: 5s\n", lim.tokens)
+	}
+
+}
+
 func TestLimiterBurst1(t *testing.T) {
 	run(t, NewLimiter(10, 1), []allow{
 		{t0, 1, true},
