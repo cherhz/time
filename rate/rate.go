@@ -222,6 +222,11 @@ func (lim *Limiter) ReserveN(now time.Time, n int) *Reservation {
 	return &r
 }
 
+func (lim *Limiter) ReserveNWait(now time.Time, n int, maxWait time.Duration) *Reservation {
+	r := lim.reserveN(now, n, maxWait)
+	return &r
+}
+
 // contextContext is a temporary(?) copy of the context.Context type
 // to support both Go 1.6 using golang.org/x/net/context and Go 1.7+
 // with the built-in context package. If people ever stop using Go 1.6
